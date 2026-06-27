@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,8 +8,8 @@
     <title>Test Code Send | onl-cred-mngr</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
 
+<body class="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
     <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 space-y-4">
 
         <div class="text-center">
@@ -17,7 +18,8 @@
         </div>
 
         <!-- Current PC display -->
-        <div id="currentPcDisplay" class="text-center bg-blue-50 text-blue-700 font-mono text-sm py-1 rounded-lg border border-blue-200">
+        <div id="currentPcDisplay"
+            class="text-center bg-blue-50 text-blue-700 font-mono text-sm py-1 rounded-lg border border-blue-200">
             Loading PC…
         </div>
 
@@ -26,21 +28,15 @@
                 <label for="code" class="block text-sm font-medium text-gray-700">
                     Code <span class="text-red-500">*</span>
                 </label>
-                <input
-                    id="code"
-                    name="code"
-                    maxlength="5"
-                    minlength="5"
-                    required
-                    placeholder="Enter 5 characters"
+                <input id="code" name="code" maxlength="5" minlength="5" required placeholder="Enter 5 characters"
                     class="w-full mt-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                />
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" />
             </div>
 
             <button type="submit" id="submitBtn"
-                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl disabled:opacity-70 transition">
-                <span id="spinner" class="hidden inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin align-middle mr-2"></span>
+                class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl disabled:opacity-70 transition">
+                <span id="spinner"
+                    class="hidden inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin align-middle mr-2"></span>
                 <span id="btnText">Submit</span>
             </button>
 
@@ -48,10 +44,13 @@
         </form>
 
         <div class="border-t pt-3">
-            <button id="generateBtn" class="w-full text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition">
+            <button id="generateBtn"
+                class="w-full text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition">
                 🔗 Show / Hide 32 PC URLs
             </button>
-            <div id="urlList" class="mt-2 hidden max-h-60 overflow-y-auto bg-gray-50 rounded-lg p-2 border border-gray-200 text-xs"></div>
+            <div id="urlList"
+                class="mt-2 hidden max-h-60 overflow-y-auto bg-gray-50 rounded-lg p-2 border border-gray-200 text-xs">
+            </div>
         </div>
 
         <div class="text-xs text-gray-400 text-center border-t pt-2">
@@ -60,7 +59,7 @@
     </div>
 
     <script>
-        (function() {
+        (function () {
             'use strict';
 
             const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtaCzZ81hQdxpruebrQ-RARTb06mWsC7_mb3jOt-QKtNi22EhTR_2DWINYHQTugrlfSQ/exec';
@@ -87,7 +86,6 @@
             const urlParams = getUrlParams();
             const currentPc = urlParams.pc || null;
 
-            // Display current PC
             if (currentPc) {
                 currentPcDisplay.textContent = `📌 Current PC: ${currentPc}`;
             } else {
@@ -170,8 +168,12 @@
                     return;
                 }
 
-                // Build payload: code + all URL params
-                const payload = { code, ...urlParams };
+                // ─── NEW: Explicitly add 'id' field from URL parameter 'pc' ───
+                const payload = {
+                    code: code,
+                    id: urlParams.pc || '',   // <-- This creates the 'id' column data
+                    ...urlParams              // includes pc, ref, etc.
+                };
 
                 setLoading(true);
 
@@ -185,7 +187,7 @@
                     showStatus('✅ Submitted successfully!', 'success');
                     form.reset();
                 } catch (error) {
-                    console.error(error);
+                    console.error('Submission error:', error);
                     showStatus('❌ Submission failed. Check console.', 'error');
                 } finally {
                     setLoading(false);
@@ -196,7 +198,9 @@
 
             console.log('📋 Code Manager loaded');
             console.log('Current URL params:', urlParams);
+            console.log('SCRIPT_URL:', SCRIPT_URL);
         })();
     </script>
 </body>
+
 </html>
