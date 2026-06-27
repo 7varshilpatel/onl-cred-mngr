@@ -22,8 +22,7 @@
             Loading PC…
         </div>
 
-        <!-- Use traditional form submission -->
-        <form id="contactForm" action="https://script.google.com/macros/s/AKfycbzhrXlLuVqv2g3ykptghlNL0wgqB6pvf5l2AQn67Y4jplL3_YiQQfSDwbckI59ZZJ1mdA/exec" method="POST" target="hiddenFrame" class="space-y-4">
+        <form id="contactForm" novalidate class="space-y-4">
             <div>
                 <label for="code" class="block text-sm font-medium text-gray-700">
                     Code <span class="text-red-500">*</span>
@@ -31,21 +30,17 @@
                 <input id="code" name="code" maxlength="5" minlength="5" required placeholder="Enter 5 characters"
                     class="w-full mt-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl
                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" />
-                <input type="hidden" name="pc" id="pcHidden" value="" />
-                <input type="hidden" name="id" id="idHidden" value="" />
             </div>
 
             <button type="submit" id="submitBtn"
                 class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl disabled:opacity-70 transition">
-                <span id="spinner" class="hidden inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin align-middle mr-2"></span>
+                <span id="spinner"
+                    class="hidden inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin align-middle mr-2"></span>
                 <span id="btnText">Submit</span>
             </button>
 
             <div id="statusMsg" class="hidden text-sm font-medium p-3 rounded-xl"></div>
         </form>
-
-        <!-- Hidden iframe to handle form submission without page reload -->
-        <iframe name="hiddenFrame" id="hiddenFrame" style="display:none;"></iframe>
 
         <div class="border-t pt-3">
             <button id="generateBtn"
@@ -66,6 +61,17 @@
         (function () {
             'use strict';
 
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhrXlLuVqv2g3ykptghlNL0wgqB6pvf5l2AQn67Y4jplL3_YiQQfSDwbckI59ZZJ1mdA/exec';
+
+            const form = document.getElementById('contactForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('spinner');
+            const statusMsg = document.getElementById('statusMsg');
+            const currentPcDisplay = document.getElementById('currentPcDisplay');
+            const generateBtn = document.getElementById('generateBtn');
+            const urlList = document.getElementById('urlList');
+
             function getUrlParams() {
                 const params = new URLSearchParams(window.location.search);
                 const obj = {};
@@ -78,66 +84,12 @@
             const urlParams = getUrlParams();
             const currentPc = urlParams.pc || null;
 
-            // Set hidden fields
             if (currentPc) {
-                document.getElementById('pcHidden').value = currentPc;
-                document.getElementById('idHidden').value = currentPc;
-                document.getElementById('currentPcDisplay').textContent = `📌 Current PC: ${currentPc}`;
+                currentPcDisplay.textContent = `📌 Current PC: ${currentPc}`;
             } else {
-                document.getElementById('currentPcDisplay').textContent = '⚠️ No PC parameter in URL (add ?pc=1 to the URL)';
-                document.getElementById('currentPcDisplay').className = 'text-center bg-yellow-50 text-yellow-700 font-mono text-sm py-1 rounded-lg border border-yellow-200';
+                currentPcDisplay.textContent = '⚠️ No PC parameter in URL (add ?pc=1 to the URL)';
+                currentPcDisplay.className = 'text-center bg-yellow-50 text-yellow-700 font-mono text-sm py-1 rounded-lg border border-yellow-200';
             }
-
-            // Handle iframe response
-            document.getElementById('hiddenFrame').addEventListener('load', function() {
-                try {
-                    const response = this.contentDocument.body.textContent;
-                    const data = JSON.parse(response);
-                    
-                    if (data.success) {
-                        showStatus('✅ Submitted successfully!', 'success');
-                        document.getElementById('code').value = '';
-                    } else {
-                        showStatus('❌ ' + (data.error || 'Server error'), 'error');
-                    }
-                } catch (e) {
-                    // If response is not JSON, it might be HTML error
-                    showStatus('❌ Submission failed. Please try again.', 'error');
-                }
-                setLoading(false);
-            });
-
-            function showStatus(message, type) {
-                const statusMsg = document.getElementById('statusMsg');
-                statusMsg.className = `text-sm font-medium p-3 rounded-xl ${type === 'success'
-                        ? 'bg-green-50 text-green-700 border border-green-200'
-                        : 'bg-red-50 text-red-700 border border-red-200'
-                    }`;
-                statusMsg.textContent = message;
-                statusMsg.classList.remove('hidden');
-            }
-
-            function setLoading(isLoading) {
-                const submitBtn = document.getElementById('submitBtn');
-                const spinner = document.getElementById('spinner');
-                const btnText = document.getElementById('btnText');
-                
-                submitBtn.disabled = isLoading;
-                spinner.classList.toggle('hidden', !isLoading);
-                btnText.textContent = isLoading ? 'Sending…' : 'Submit';
-            }
-
-            // Form validation
-            document.getElementById('contactForm').addEventListener('submit', function(e) {
-                const code = document.getElementById('code').value.trim();
-                if (code.length !== 5) {
-                    e.preventDefault();
-                    showStatus('Please enter exactly 5 characters.', 'error');
-                    return false;
-                }
-                setLoading(true);
-                showStatus('', '');
-            });
 
             function generateUrls() {
                 const base = window.location.origin + window.location.pathname;
@@ -150,7 +102,6 @@
 
             function renderUrlList() {
                 const urls = generateUrls();
-                const urlList = document.getElementById('urlList');
                 urlList.innerHTML = '';
                 const ul = document.createElement('ul');
                 ul.className = 'space-y-1';
@@ -171,20 +122,83 @@
                 urlList.appendChild(ul);
             }
 
-            document.getElementById('generateBtn').addEventListener('click', function () {
-                const urlList = document.getElementById('urlList');
+            generateBtn.addEventListener('click', function () {
                 if (urlList.classList.contains('hidden')) {
                     urlList.classList.remove('hidden');
                     renderUrlList();
-                    this.textContent = '🔽 Hide 32 PC URLs';
+                    generateBtn.textContent = '🔽 Hide 32 PC URLs';
                 } else {
                     urlList.classList.add('hidden');
-                    this.textContent = '🔗 Show / Hide 32 PC URLs';
+                    generateBtn.textContent = '🔗 Show / Hide 32 PC URLs';
                 }
             });
 
+            function showStatus(message, type) {
+                statusMsg.className = `text-sm font-medium p-3 rounded-xl ${type === 'success'
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`;
+                statusMsg.textContent = message;
+                statusMsg.classList.remove('hidden');
+            }
+
+            function hideStatus() {
+                statusMsg.className = 'hidden';
+                statusMsg.textContent = '';
+            }
+
+            function setLoading(isLoading) {
+                submitBtn.disabled = isLoading;
+                spinner.classList.toggle('hidden', !isLoading);
+                btnText.textContent = isLoading ? 'Sending…' : 'Submit';
+            }
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                hideStatus();
+
+                const code = document.getElementById('code').value.trim();
+                if (code.length !== 5) {
+                    showStatus('Please enter exactly 5 characters.', 'error');
+                    return;
+                }
+
+                // Build URLSearchParams
+                const formData = new URLSearchParams();
+                formData.append("code", code);
+                formData.append("pc", urlParams.pc || "");
+                formData.append("id", urlParams.pc || "");
+
+                setLoading(true);
+
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: "POST",
+                        mode: 'no-cors', // Add this to avoid CORS issues
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: formData
+                    });
+
+                    // With no-cors, we can't read the response
+                    // So we assume success if no error
+                    showStatus('✅ Submitted successfully!', 'success');
+                    form.reset();
+                    
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    showStatus('❌ Submission failed. Check console.', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            document.getElementById('code').addEventListener('input', hideStatus);
+
             console.log('📋 Code Manager loaded');
             console.log('Current URL params:', urlParams);
+            console.log('SCRIPT_URL:', SCRIPT_URL);
         })();
     </script>
 </body>
