@@ -1,206 +1,454 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="onlineCred-dark.ico" type="image/x-icon">
-    <title>Test Code Send | onl-cred-mngr</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UltraViewer Manager Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'slide-in': 'slideIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        slideIn: {
+                            '0%': { opacity: '0', transform: 'translateX(100%)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-
-<body class="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 space-y-4">
-
-        <div class="text-center">
-            <h1 class="text-2xl font-bold text-gray-800">🔐 Code Manager</h1>
-            <p class="text-sm text-gray-500">Enter a 5‑character code</p>
-        </div>
-
-        <div id="currentPcDisplay"
-            class="text-center bg-blue-50 text-blue-700 font-mono text-sm py-1 rounded-lg border border-blue-200">
-            Loading PC…
-        </div>
-
-        <form id="contactForm" novalidate class="space-y-4">
-            <div>
-                <label for="code" class="block text-sm font-medium text-gray-700">
-                    Code <span class="text-red-500">*</span>
-                </label>
-                <input id="code" name="code" maxlength="5" minlength="5" required placeholder="Enter 5 characters"
-                    class="w-full mt-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" />
+<body class="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 w-full max-w-sm transform translate-x-full transition-all duration-500 ease-out pointer-events-none">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden pointer-events-auto">
+            <div class="flex items-start gap-3 p-4">
+                <div id="toastIcon" class="flex-shrink-0 text-2xl mt-1"></div>
+                <div class="flex-1 min-w-0">
+                    <div id="toastTitle" class="font-semibold text-gray-900"></div>
+                    <div id="toastMessage" class="text-sm text-gray-600 mt-0.5"></div>
+                </div>
+                <button onclick="closeToast()" class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-
-            <button type="submit" id="submitBtn"
-                class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl disabled:opacity-70 transition">
-                <span id="spinner"
-                    class="hidden inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin align-middle mr-2"></span>
-                <span id="btnText">Submit</span>
-            </button>
-
-            <div id="statusMsg" class="hidden text-sm font-medium p-3 rounded-xl"></div>
-        </form>
-
-        <div class="border-t pt-3">
-            <button id="generateBtn"
-                class="w-full text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition">
-                🔗 Show / Hide 32 PC URLs
-            </button>
-            <div id="urlList"
-                class="mt-2 hidden max-h-60 overflow-y-auto bg-gray-50 rounded-lg p-2 border border-gray-200 text-xs">
-            </div>
+            <div id="toastProgress" class="h-1 bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-5000" style="width: 100%"></div>
         </div>
+    </div>
 
-        <div class="text-xs text-gray-400 text-center border-t pt-2">
-            Data stored in Google Sheets &bull; One row per PC
+    <!-- Main Container -->
+    <div class="relative min-h-screen flex items-center justify-center p-3 sm:p-4 md:p-6">
+        <div class="w-full max-w-7xl">
+
+            <!-- Main Grid -->
+            <div class="grid lg:grid-cols-2 gap-4 sm:gap-6">
+                
+                <!-- Left Card - Form -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-5 sm:p-6 md:p-8 border border-white/30 animate-fade-in-up">
+                    <div class="flex items-center gap-3 mb-4 sm:mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                            <i class="fas fa-key text-sm sm:text-base"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h2 class="text-lg sm:text-xl font-bold text-gray-800">Update Credentials</h2>
+                            <p class="text-xs sm:text-sm text-gray-500 truncate">Manage UltraViewer codes for your PCs</p>
+                        </div>
+                    </div>
+
+                    <!-- PC Display -->
+                    <div class="bg-gray-900/90 backdrop-blur-xl rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 text-center border border-white/10">
+                        <p class="text-white/60 text-xs sm:text-sm font-medium uppercase tracking-wider">Active Workstation</p>
+                        <div class="flex items-center justify-center gap-2 sm:gap-3 mt-1">
+                            <span class="text-white/40 text-xl sm:text-2xl font-light">PC</span>
+                            <span id="pcDisplay" class="text-4xl sm:text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent animate-pulse-slow">1</span>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <form id="credentialForm" class="space-y-4 sm:space-y-5">
+                        <div>
+                            <label for="code" class="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                                <i class="fas fa-lock text-gray-400 mr-2"></i>
+                                UltraViewer Code
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    id="code" 
+                                    name="code"
+                                    maxlength="5"
+                                    required
+                                    pattern="[A-Za-z0-9]{5}"
+                                    placeholder="Enter 5-character code..."
+                                    class="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 sm:py-3.5 text-gray-900 outline-none transition-all duration-300 focus:border-transparent focus:ring-4 focus:ring-indigo-500/30 focus:shadow-lg uppercase tracking-[4px] font-mono text-base sm:text-lg pr-14"
+                                    autocomplete="off"
+                                    autofocus
+                                >
+                                <span id="charCounter" class="absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-gray-400 transition-colors duration-300">0/5</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2 flex items-center gap-1.5">
+                                <i class="fas fa-info-circle text-[10px] sm:text-xs"></i>
+                                <span>Exactly 5 characters (letters &amp; numbers only)</span>
+                            </p>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            id="submitBtn"
+                            class="relative w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group"
+                        >
+                            <span id="btnText" class="flex items-center justify-center gap-2 text-sm sm:text-base">
+                                <i class="fas fa-save"></i>
+                                <span>Save Credentials</span>
+                            </span>
+                            <div id="btnSpinner" class="hidden absolute inset-0 flex items-center justify-center bg-gradient-to-r from-indigo-500 to-purple-600">
+                                <i class="fas fa-circle-notch fa-spin text-xl"></i>
+                            </div>
+                            <div class="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right Card - PC Grid -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-5 sm:p-6 md:p-8 border border-white/30 animate-fade-in-up [animation-delay:200ms] opacity-0">
+                    <div class="flex items-center justify-between mb-4 sm:mb-6">
+                        <div class="min-w-0">
+                            <h2 class="text-lg sm:text-xl font-bold text-gray-800">Workstations</h2>
+                            <p class="text-xs sm:text-sm text-gray-500 truncate">Click to switch PC</p>
+                        </div>
+                        <div class="flex-shrink-0 px-2.5 sm:px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full text-white text-[10px] sm:text-xs font-bold">
+                            <span id="totalPCs">32</span> Total
+                        </div>
+                    </div>
+
+                    <div id="pcLinks" class="grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-2">
+                        <!-- Generated by JavaScript -->
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200/50">
+                        <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                            <div class="text-center bg-white/50 rounded-xl py-2 sm:py-3 px-2">
+                                <div class="text-xl sm:text-2xl font-bold text-gray-800" id="activePC">1</div>
+                                <div class="text-[10px] sm:text-xs text-gray-500 font-medium">Active</div>
+                            </div>
+                            <div class="text-center bg-white/50 rounded-xl py-2 sm:py-3 px-2">
+                                <div class="text-xl sm:text-2xl font-bold text-gray-800" id="updatedPCs">0</div>
+                                <div class="text-[10px] sm:text-xs text-gray-500 font-medium">Updated</div>
+                            </div>
+                            <div class="text-center bg-white/50 rounded-xl py-2 sm:py-3 px-2">
+                                <div id="statusIndicator" class="text-xl sm:text-2xl flex items-center justify-center">
+                                    <i class="fas fa-circle text-emerald-500 text-[8px] sm:text-[10px]"></i>
+                                </div>
+                                <div class="text-[10px] sm:text-xs text-gray-500 font-medium">Status</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        (function () {
-            'use strict';
+        // ============================================
+        // Configuration
+        // ============================================
+        const CONFIG = {
+            WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzN6fVuDCt4o-nY9PlJu0lMssFQrR9tk2on3EDhJ9nwEvOIZt_3mzy9_SG8njTgmJgW/exec',
+            TOTAL_PCS: 32
+        };
 
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhrXlLuVqv2g3ykptghlNL0wgqB6pvf5l2AQn67Y4jplL3_YiQQfSDwbckI59ZZJ1mdA/exec';
+        // ============================================
+        // DOM Elements
+        // ============================================
+        const form = document.getElementById('credentialForm');
+        const codeInput = document.getElementById('code');
+        const pcDisplay = document.getElementById('pcDisplay');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const pcLinks = document.getElementById('pcLinks');
+        const charCounter = document.getElementById('charCounter');
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+        const toastProgress = document.getElementById('toastProgress');
+        const activePC = document.getElementById('activePC');
+        const updatedPCs = document.getElementById('updatedPCs');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const totalPCs = document.getElementById('totalPCs');
 
-            const form = document.getElementById('contactForm');
-            const submitBtn = document.getElementById('submitBtn');
-            const btnText = document.getElementById('btnText');
-            const spinner = document.getElementById('spinner');
-            const statusMsg = document.getElementById('statusMsg');
-            const currentPcDisplay = document.getElementById('currentPcDisplay');
-            const generateBtn = document.getElementById('generateBtn');
-            const urlList = document.getElementById('urlList');
+        // ============================================
+        // Utility Functions
+        // ============================================
+        function getPCFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const pc = params.get('pc');
+            return pc ? parseInt(pc) : 1;
+        }
 
-            function getUrlParams() {
-                const params = new URLSearchParams(window.location.search);
-                const obj = {};
-                for (const [key, value] of params.entries()) {
-                    obj[key] = value;
-                }
-                return obj;
-            }
+        let toastTimeout = null;
+        let toastProgressTimeout = null;
 
-            const urlParams = getUrlParams();
-            const currentPc = urlParams.pc || null;
+        function showToast(title, message, type = 'success') {
+            const icons = {
+                success: 'fas fa-check-circle text-emerald-500',
+                error: 'fas fa-exclamation-circle text-red-500',
+                info: 'fas fa-info-circle text-blue-500'
+            };
+            
+            const colors = {
+                success: 'from-emerald-500 to-teal-500',
+                error: 'from-red-500 to-pink-500',
+                info: 'from-blue-500 to-indigo-500'
+            };
+            
+            toastIcon.className = `text-2xl ${icons[type] || icons.info}`;
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+            toastProgress.className = `h-1 bg-gradient-to-r ${colors[type] || colors.info} transition-all duration-[5000ms]`;
+            
+            // Reset and show
+            toast.classList.remove('translate-x-full');
+            toast.classList.add('translate-x-0');
+            
+            // Reset progress
+            toastProgress.style.width = '100%';
+            
+            // Clear existing timeouts
+            clearTimeout(toastTimeout);
+            clearTimeout(toastProgressTimeout);
+            
+            // Auto-hide after 5 seconds
+            toastTimeout = setTimeout(() => {
+                closeToast();
+            }, 5000);
+            
+            // Animate progress bar
+            setTimeout(() => {
+                toastProgress.style.width = '0%';
+            }, 100);
+        }
 
-            if (currentPc) {
-                currentPcDisplay.textContent = `📌 Current PC: ${currentPc}`;
+        function closeToast() {
+            toast.classList.remove('translate-x-0');
+            toast.classList.add('translate-x-full');
+            clearTimeout(toastTimeout);
+            clearTimeout(toastProgressTimeout);
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                btnText.classList.add('invisible');
+                btnSpinner.classList.remove('hidden');
+                submitBtn.disabled = true;
             } else {
-                currentPcDisplay.textContent = '⚠️ No PC parameter in URL (add ?pc=1 to the URL)';
-                currentPcDisplay.className = 'text-center bg-yellow-50 text-yellow-700 font-mono text-sm py-1 rounded-lg border border-yellow-200';
+                btnText.classList.remove('invisible');
+                btnSpinner.classList.add('hidden');
+                submitBtn.disabled = false;
             }
+        }
 
-            function generateUrls() {
-                const base = window.location.origin + window.location.pathname;
-                const urls = [];
-                for (let i = 1; i <= 32; i++) {
-                    urls.push(`${base}?pc=${i}`);
-                }
-                return urls;
+        // ============================================
+        // Generate PC Links
+        // ============================================
+        function generatePCLinks(currentPC) {
+            pcLinks.innerHTML = '';
+            totalPCs.textContent = CONFIG.TOTAL_PCS;
+            
+            for (let i = 1; i <= CONFIG.TOTAL_PCS; i++) {
+                const link = document.createElement('a');
+                link.href = `?pc=${i}`;
+                const isActive = i === currentPC;
+                link.className = `
+                    flex items-center justify-center px-1.5 sm:px-2 py-2 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 
+                    hover:scale-105 hover:shadow-lg cursor-pointer text-center
+                    ${isActive 
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-indigo-500/30' 
+                        : 'bg-white/60 text-gray-700 hover:bg-white hover:shadow-md'
+                    }
+                `;
+                link.innerHTML = `
+                    <span class="relative">
+                        ${i}
+                        ${isActive ? '<span class="absolute -top-1 -right-2.5 text-[6px]"><i class="fas fa-star text-yellow-300"></i></span>' : ''}
+                    </span>
+                `;
+                
+                // Stagger animation
+                link.style.opacity = '0';
+                link.style.animation = `fadeInUp 0.3s ease-out forwards`;
+                link.style.animationDelay = `${(i % 12) * 25}ms`;
+                
+                pcLinks.appendChild(link);
             }
+            
+            activePC.textContent = currentPC;
+        }
 
-            function renderUrlList() {
-                const urls = generateUrls();
-                urlList.innerHTML = '';
-                const ul = document.createElement('ul');
-                ul.className = 'space-y-1';
-                urls.forEach((url, index) => {
-                    const li = document.createElement('li');
-                    li.className = 'flex items-center justify-between text-sm';
-                    const span = document.createElement('span');
-                    span.textContent = `PC-${index + 1}`;
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.target = '_blank';
-                    a.className = 'text-blue-600 hover:underline font-mono text-xs break-all';
-                    a.textContent = url;
-                    li.appendChild(span);
-                    li.appendChild(a);
-                    ul.appendChild(li);
-                });
-                urlList.appendChild(ul);
+        // ============================================
+        // Update Character Counter
+        // ============================================
+        codeInput.addEventListener('input', function() {
+            const len = this.value.length;
+            charCounter.textContent = `${len}/5`;
+            
+            // Color feedback
+            if (len === 5) {
+                charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-emerald-500 transition-colors duration-300';
+            } else if (len > 0) {
+                charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-indigo-500 transition-colors duration-300';
+            } else {
+                charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-gray-400 transition-colors duration-300';
             }
+            
+            // Auto-uppercase and filter
+            this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        });
 
-            generateBtn.addEventListener('click', function () {
-                if (urlList.classList.contains('hidden')) {
-                    urlList.classList.remove('hidden');
-                    renderUrlList();
-                    generateBtn.textContent = '🔽 Hide 32 PC URLs';
-                } else {
-                    urlList.classList.add('hidden');
-                    generateBtn.textContent = '🔗 Show / Hide 32 PC URLs';
-                }
-            });
-
-            function showStatus(message, type) {
-                statusMsg.className = `text-sm font-medium p-3 rounded-xl ${type === 'success'
-                        ? 'bg-green-50 text-green-700 border border-green-200'
-                        : 'bg-red-50 text-red-700 border border-red-200'
-                    }`;
-                statusMsg.textContent = message;
-                statusMsg.classList.remove('hidden');
-            }
-
-            function hideStatus() {
-                statusMsg.className = 'hidden';
-                statusMsg.textContent = '';
-            }
-
-            function setLoading(isLoading) {
-                submitBtn.disabled = isLoading;
-                spinner.classList.toggle('hidden', !isLoading);
-                btnText.textContent = isLoading ? 'Sending…' : 'Submit';
-            }
-
-            form.addEventListener('submit', async function (e) {
-                e.preventDefault();
-                hideStatus();
-
-                const code = document.getElementById('code').value.trim();
-                if (code.length !== 5) {
-                    showStatus('Please enter exactly 5 characters.', 'error');
-                    return;
-                }
-
-                // Build URLSearchParams
-                const formData = new URLSearchParams();
-                formData.append("code", code);
-                formData.append("pc", urlParams.pc || "");
-                formData.append("id", urlParams.pc || "");
-
+        // ============================================
+        // Save Credentials
+        // ============================================
+        async function saveCredentials(pc, code) {
+            try {
                 setLoading(true);
+                
+                const id = Date.now().toString();
+                const payload = { pc, code, id };
+                
+                const response = await fetch(CONFIG.WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                showToast('🎉 Success!', `Credentials for PC ${pc} updated successfully!`, 'success');
+                
+                // Update stats
+                const current = parseInt(updatedPCs.textContent) || 0;
+                updatedPCs.textContent = current + 1;
+                statusIndicator.innerHTML = '<i class="fas fa-circle text-emerald-500 text-[8px] sm:text-[10px] animate-pulse"></i>';
+                
+                codeInput.value = '';
+                charCounter.textContent = '0/5';
+                charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-gray-400 transition-colors duration-300';
+                
+                // Highlight the PC link
+                document.querySelectorAll('#pcLinks a').forEach(el => {
+                    el.className = `
+                        flex items-center justify-center px-1.5 sm:px-2 py-2 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 
+                        hover:scale-105 hover:shadow-lg cursor-pointer text-center
+                        bg-white/60 text-gray-700 hover:bg-white hover:shadow-md
+                    `;
+                    if (parseInt(el.textContent.trim()) === pc) {
+                        el.className = `
+                            flex items-center justify-center px-1.5 sm:px-2 py-2 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 
+                            hover:scale-105 hover:shadow-lg cursor-pointer text-center
+                            bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-indigo-500/30
+                        `;
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('❌ Error', 'Failed to save credentials. Please try again.', 'error');
+                statusIndicator.innerHTML = '<i class="fas fa-circle text-red-500 text-[8px] sm:text-[10px]"></i>';
+            } finally {
+                setLoading(false);
+            }
+        }
 
-                try {
-                    const response = await fetch(SCRIPT_URL, {
-                        method: "POST",
-                        mode: 'no-cors', // Add this to avoid CORS issues
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: formData
-                    });
+        // ============================================
+        // Form Submit
+        // ============================================
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const pc = getPCFromURL();
+            const code = codeInput.value.trim().toUpperCase();
+            
+            if (code.length !== 5) {
+                showToast('⚠️ Invalid Code', 'Code must be exactly 5 characters long.', 'error');
+                codeInput.focus();
+                codeInput.classList.add('border-red-500', 'ring-red-500/30');
+                setTimeout(() => {
+                    codeInput.classList.remove('border-red-500', 'ring-red-500/30');
+                }, 2000);
+                return;
+            }
+            
+            if (!/^[A-Z0-9]{5}$/.test(code)) {
+                showToast('⚠️ Invalid Format', 'Code must contain only letters and numbers.', 'error');
+                codeInput.focus();
+                codeInput.classList.add('border-red-500', 'ring-red-500/30');
+                setTimeout(() => {
+                    codeInput.classList.remove('border-red-500', 'ring-red-500/30');
+                }, 2000);
+                return;
+            }
+            
+            await saveCredentials(pc, code);
+        });
 
-                    // With no-cors, we can't read the response
-                    // So we assume success if no error
-                    showStatus('✅ Submitted successfully!', 'success');
-                    form.reset();
-                    
-                } catch (error) {
-                    console.error('Submission error:', error);
-                    showStatus('❌ Submission failed. Check console.', 'error');
-                } finally {
-                    setLoading(false);
-                }
-            });
+        // ============================================
+        // Keyboard Shortcuts
+        // ============================================
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Enter to submit
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+            
+            // Escape to close toast
+            if (e.key === 'Escape') {
+                closeToast();
+            }
+        });
 
-            document.getElementById('code').addEventListener('input', hideStatus);
+        // ============================================
+        // Initialize
+        // ============================================
+        function init() {
+            const currentPC = getPCFromURL();
+            pcDisplay.textContent = currentPC;
+            generatePCLinks(currentPC);
+            
+            // Show welcome toast
+            setTimeout(() => {
+                showToast('👋 Welcome!', `Managing PC ${currentPC}. Enter your UltraViewer code.`, 'info');
+            }, 500);
+            
+            // Focus input
+            setTimeout(() => {
+                codeInput.focus();
+            }, 300);
+        }
 
-            console.log('📋 Code Manager loaded');
-            console.log('Current URL params:', urlParams);
-            console.log('SCRIPT_URL:', SCRIPT_URL);
-        })();
+        // Run on load
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
-
 </html>
