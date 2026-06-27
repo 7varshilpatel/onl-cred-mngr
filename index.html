@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="assets/icon/onlineCred-dark.ico" type="image/x-icon">
+    <title>Simple Form → Google Sheets</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
+
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-6 space-y-6">
+
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-gray-800">📋 Code Manager</h1>
+            <p class="text-sm text-gray-500">Enter a 5‑character code for the current PC</p>
+        </div>
+
+        <!-- Current URL parameters display -->
+        <div id="paramsDisplay" class="text-center text-sm bg-gray-100 rounded-lg py-1 px-3 text-gray-700 font-mono">
+            Loading parameters…
+        </div>
+
+        <!-- Form: only code input -->
+        <form id="contactForm" novalidate class="space-y-4">
+            <div>
+                <label for="code" class="block text-sm font-medium text-gray-700">
+                    Code <span class="text-red-500">*</span>
+                </label>
+                <input
+                    id="code"
+                    name="code"
+                    maxlength="5"
+                    minlength="5"
+                    required
+                    placeholder="Enter 5 characters"
+                    class="w-full mt-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                />
+            </div>
+
+            <button type="submit" id="submitBtn"
+                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl disabled:opacity-70 transition">
+                <span id="spinner" class="hidden inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin align-middle mr-2"></span>
+                <span id="btnText">Submit</span>
+            </button>
+
+            <div id="statusMsg" class="hidden text-sm font-medium p-3 rounded-xl"></div>
+        </form>
+
+        <!-- Generate 32 URLs section -->
+        <div class="border-t pt-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-gray-700">🔗 Generate 32 PC URLs</h2>
+                <button id="generateBtn" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg transition">
+                    Show / Hide
+                </button>
+            </div>
+            <div id="urlList" class="mt-2 hidden max-h-60 overflow-y-auto bg-gray-50 rounded-lg p-2 border border-gray-200">
+                <!-- URLs will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-xs text-gray-400 text-center border-t pt-3">
+            Data stored in Google Sheets &bull; One row per PC
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ─── CONFIG ────────────────────────────────────────────────
+            // 👇 REPLACE with your Apps Script Web App URL
+            const SCRIPT_URL =
+                'https://script.google.com/macros/s/AKfycbxtaCzZ81hQdxpruebrQ-RARTb06mWsC7_mb3jOt-QKtNi22EhTR_2DWINYHQTugrlfSQ/exec';
+
+             // ─── DOM references ──────────────────────────────────────
+            const form = document.getElementById('contactForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('spinner');
+            const statusMsg = document.getElementById('statusMsg');
+            const paramsDisplay = document.getElementById('paramsDisplay');
+            const generateBtn = document.getElementById('generateBtn');
+            const urlList = document.getElementById('urlList');
+
+            // ─── Capture URL parameters ──────────────────────────────
+            function getUrlParams() {
+                const params = new URLSearchParams(window.location.search);
+                const obj = {};
+                for (const [key, value] of params.entries()) {
+                    obj[key] = value;
+                }
+                return obj;
+            }
+
+            const urlParams = getUrlParams();
+            const currentPc = urlParams.pc || 'none';
+
+            // Display current params
+            paramsDisplay.textContent = currentPc !== 'none'
+                ? `📎 Current PC: ${currentPc}`
+                : '📎 No PC parameter in URL';
+
+            // ─── Generate 32 URLs ──────────────────────────────────
+            function generateUrls() {
+                const base = window.location.origin + window.location.pathname;
+                const urls = [];
+                for (let i = 1; i <= 32; i++) {
+                    urls.push(`${base}?pc=${i}`);
+                }
+                return urls;
+            }
+
+            function renderUrlList() {
+                const urls = generateUrls();
+                const container = urlList;
+                container.innerHTML = '';
+                const ul = document.createElement('ul');
+                ul.className = 'space-y-1';
+                urls.forEach((url, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between text-sm';
+                    const span = document.createElement('span');
+                    span.textContent = `PC-${index + 1}`;
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.target = '_blank';
+                    a.className = 'text-blue-600 hover:underline font-mono text-xs break-all';
+                    a.textContent = url;
+                    li.appendChild(span);
+                    li.appendChild(a);
+                    ul.appendChild(li);
+                });
+                container.appendChild(ul);
+            }
+
+            generateBtn.addEventListener('click', function() {
+                if (urlList.classList.contains('hidden')) {
+                    urlList.classList.remove('hidden');
+                    renderUrlList(); // (re)generate on show
+                } else {
+                    urlList.classList.add('hidden');
+                }
+            });
+
+            // ─── Form submission ──────────────────────────────────────
+            function showStatus(message, type) {
+                statusMsg.className = `text-sm font-medium p-3 rounded-xl ${
+                    type === 'success'
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                }`;
+                statusMsg.textContent = message;
+                statusMsg.classList.remove('hidden');
+            }
+
+            function hideStatus() {
+                statusMsg.className = 'hidden';
+                statusMsg.textContent = '';
+            }
+
+            function setLoading(isLoading) {
+                submitBtn.disabled = isLoading;
+                spinner.classList.toggle('hidden', !isLoading);
+                btnText.textContent = isLoading ? 'Sending…' : 'Submit';
+            }
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                hideStatus();
+
+                const code = document.getElementById('code').value.trim();
+                if (code.length !== 5) {
+                    showStatus('Please enter exactly 5 characters.', 'error');
+                    return;
+                }
+
+                // Build payload: code + all URL params (including pc)
+                const payload = {
+                    code: code,
+                    ...urlParams   // spreads pc, ref, etc.
+                };
+
+                setLoading(true);
+
+                try {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                    showStatus('✅ Submitted successfully!', 'success');
+                    form.reset();
+                } catch (error) {
+                    console.error(error);
+                    showStatus('❌ Submission failed. Check console.', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            // Hide status on input
+            document.getElementById('code').addEventListener('input', hideStatus);
+
+            // ─── Console info ──────────────────────────────────────
+            console.log('📋 PC Code Manager loaded');
+            console.log('Current URL params:', urlParams);
+            console.log('SCRIPT_URL:', SCRIPT_URL);
+        })();
+    </script>
+
+</body>
+</html>
