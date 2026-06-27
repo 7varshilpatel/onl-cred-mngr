@@ -17,7 +17,6 @@
             <p class="text-sm text-gray-500">Enter a 5‑character code</p>
         </div>
 
-        <!-- Current PC display -->
         <div id="currentPcDisplay"
             class="text-center bg-blue-50 text-blue-700 font-mono text-sm py-1 rounded-lg border border-blue-200">
             Loading PC…
@@ -73,7 +72,6 @@
             const generateBtn = document.getElementById('generateBtn');
             const urlList = document.getElementById('urlList');
 
-            // ─── Get URL parameters ──────────────────────────────────
             function getUrlParams() {
                 const params = new URLSearchParams(window.location.search);
                 const obj = {};
@@ -93,7 +91,6 @@
                 currentPcDisplay.className = 'text-center bg-yellow-50 text-yellow-700 font-mono text-sm py-1 rounded-lg border border-yellow-200';
             }
 
-            // ─── Generate 32 URLs ──────────────────────────────────
             function generateUrls() {
                 const base = window.location.origin + window.location.pathname;
                 const urls = [];
@@ -125,7 +122,7 @@
                 urlList.appendChild(ul);
             }
 
-            generateBtn.addEventListener('click', function() {
+            generateBtn.addEventListener('click', function () {
                 if (urlList.classList.contains('hidden')) {
                     urlList.classList.remove('hidden');
                     renderUrlList();
@@ -136,13 +133,11 @@
                 }
             });
 
-            // ─── Form submission ──────────────────────────────────────
             function showStatus(message, type) {
-                statusMsg.className = `text-sm font-medium p-3 rounded-xl ${
-                    type === 'success'
+                statusMsg.className = `text-sm font-medium p-3 rounded-xl ${type === 'success'
                         ? 'bg-green-50 text-green-700 border border-green-200'
                         : 'bg-red-50 text-red-700 border border-red-200'
-                }`;
+                    }`;
                 statusMsg.textContent = message;
                 statusMsg.classList.remove('hidden');
             }
@@ -158,7 +153,7 @@
                 btnText.textContent = isLoading ? 'Sending…' : 'Submit';
             }
 
-            form.addEventListener('submit', async function(e) {
+            form.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 hideStatus();
 
@@ -168,24 +163,29 @@
                     return;
                 }
 
-                // ─── NEW: Explicitly add 'id' field from URL parameter 'pc' ───
-                const payload = {
-                    code: code,
-                    id: urlParams.pc || '',   // <-- This creates the 'id' column data
-                    ...urlParams              // includes pc, ref, etc.
-                };
+                // Build URLSearchParams
+                const formData = new URLSearchParams();
+                formData.append("code", code);
+                formData.append("pc", urlParams.pc || "");
+                formData.append("id", urlParams.pc || "");
 
                 setLoading(true);
 
                 try {
-                    await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
+                    const response = await fetch(SCRIPT_URL, {
+                        method: "POST",
+                        body: formData
+                        // Content-Type is automatically set to application/x-www-form-urlencoded
                     });
-                    showStatus('✅ Submitted successfully!', 'success');
-                    form.reset();
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showStatus('✅ Submitted successfully!', 'success');
+                        form.reset();
+                    } else {
+                        showStatus('❌ ' + (result.error || 'Server error'), 'error');
+                    }
                 } catch (error) {
                     console.error('Submission error:', error);
                     showStatus('❌ Submission failed. Check console.', 'error');
