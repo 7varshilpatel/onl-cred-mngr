@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="logo.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="onlineCred-dark.ico" type="image/x-icon">
     <title>Test Code Send | onl-cred-mngr</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -95,9 +95,10 @@
                                     type="text" 
                                     id="code" 
                                     name="code"
-                                    maxlength="100"
+                                    maxlength="5"
                                     required
-                                    pattern="[A-Za-z0-9]{100}"
+                                    pattern="[A-Za-z0-9]{5}"
+                                    placeholder="Enter 5-character code..."
                                     class="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 sm:py-3.5 text-gray-900 outline-none transition-all duration-300 focus:border-transparent focus:ring-4 focus:ring-indigo-500/30 focus:shadow-lg uppercase tracking-[4px] font-mono text-base sm:text-lg pr-14"
                                     autocomplete="off"
                                     autofocus
@@ -106,7 +107,7 @@
                             </div>
                             <p class="text-xs text-gray-400 mt-2 flex items-center gap-1.5">
                                 <i class="fas fa-info-circle text-[10px] sm:text-xs"></i>
-                                <span>100 characters (letters &amp; numbers only)</span>
+                                <span>Exactly 5 characters (letters &amp; numbers only)</span>
                             </p>
                         </div>
 
@@ -310,10 +311,10 @@
         // ============================================
         codeInput.addEventListener('input', function() {
             const len = this.value.length;
-            charCounter.textContent = `${len}/100`;
+            charCounter.textContent = `${len}/5`;
             
             // Color feedback
-            if (len === 100) {
+            if (len === 5) {
                 charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-emerald-500 transition-colors duration-300';
             } else if (len > 0) {
                 charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-indigo-500 transition-colors duration-300';
@@ -352,7 +353,7 @@
                 statusIndicator.innerHTML = '<i class="fas fa-circle text-emerald-500 text-[8px] sm:text-[10px] animate-pulse"></i>';
                 
                 codeInput.value = '';
-                charCounter.textContent = '0/100';
+                charCounter.textContent = '0/5';
                 charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-gray-400 transition-colors duration-300';
                 
                 // Highlight the PC link
@@ -389,8 +390,8 @@
             const pc = getPCFromURL();
             const code = codeInput.value.trim().toUpperCase();
             
-            if (code.length !== 100) {
-                showToast('⚠️ Invalid Code', 'Code must be exactly 100 characters long.', 'error');
+            if (code.length !== 5) {
+                showToast('⚠️ Invalid Code', 'Code must be exactly 5 characters long.', 'error');
                 codeInput.focus();
                 codeInput.classList.add('border-red-500', 'ring-red-500/30');
                 setTimeout(() => {
@@ -399,7 +400,7 @@
                 return;
             }
             
-            if (!/^[A-Z0-9]{100}$/.test(code)) {
+            if (!/^[A-Z0-9]{5}$/.test(code)) {
                 showToast('⚠️ Invalid Format', 'Code must contain only letters and numbers.', 'error');
                 codeInput.focus();
                 codeInput.classList.add('border-red-500', 'ring-red-500/30');
