@@ -107,7 +107,7 @@
                             </div>
                             <p class="text-xs text-gray-400 mt-2 flex items-center gap-1.5">
                                 <i class="fas fa-info-circle text-[10px] sm:text-xs"></i>
-                                <span>Exactly 5 characters (letters &amp; numbers only)</span>
+                                <span>Exactly 100 characters (letters &amp; numbers only)</span>
                             </p>
                         </div>
 
@@ -311,10 +311,10 @@
         // ============================================
         codeInput.addEventListener('input', function() {
             const len = this.value.length;
-            charCounter.textContent = `${len}/5`;
+            charCounter.textContent = `${len}/100`;
             
             // Color feedback
-            if (len === 5) {
+            if (len === 100) {
                 charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-emerald-500 transition-colors duration-300';
             } else if (len > 0) {
                 charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-indigo-500 transition-colors duration-300';
@@ -353,7 +353,7 @@
                 statusIndicator.innerHTML = '<i class="fas fa-circle text-emerald-500 text-[8px] sm:text-[10px] animate-pulse"></i>';
                 
                 codeInput.value = '';
-                charCounter.textContent = '0/5';
+                charCounter.textContent = '0/100';
                 charCounter.className = 'absolute right-4 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-semibold text-gray-400 transition-colors duration-300';
                 
                 // Highlight the PC link
@@ -390,8 +390,8 @@
             const pc = getPCFromURL();
             const code = codeInput.value.trim().toUpperCase();
             
-            if (code.length !== 5) {
-                showToast('⚠️ Invalid Code', 'Code must be exactly 5 characters long.', 'error');
+            if (code.length !== 100) {
+                showToast('⚠️ Invalid Code', 'Code must be exactly 100 characters long.', 'error');
                 codeInput.focus();
                 codeInput.classList.add('border-red-500', 'ring-red-500/30');
                 setTimeout(() => {
@@ -400,7 +400,7 @@
                 return;
             }
             
-            if (!/^[A-Z0-9]{5}$/.test(code)) {
+            if (!/^[A-Z0-9]{100}$/.test(code)) {
                 showToast('⚠️ Invalid Format', 'Code must contain only letters and numbers.', 'error');
                 codeInput.focus();
                 codeInput.classList.add('border-red-500', 'ring-red-500/30');
